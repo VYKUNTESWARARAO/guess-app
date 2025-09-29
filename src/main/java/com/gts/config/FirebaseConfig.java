@@ -19,7 +19,7 @@ public class FirebaseConfig {
     // Read the Firebase service account JSON from environment variable
     private static final String FIREBASE_JSON_ENV = "FIREBASE_SERVICE_ACCOUNT";
 
-    @Bean
+
     public void init() throws IOException {
         String firebaseJson = System.getenv(FIREBASE_JSON_ENV);
         if (firebaseJson == null || firebaseJson.isEmpty()) {
