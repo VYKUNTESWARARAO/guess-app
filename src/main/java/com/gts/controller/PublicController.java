@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @CrossOrigin("*")
-@RequestMapping("/api/public")
+
 public class PublicController {
 
     @GetMapping("/rules")
@@ -21,5 +21,9 @@ public class PublicController {
                 5. After 30 sec or wrong guess → 0 points.
                 """;
         return ResponseEntity.ok(rules);
+    }
+    @GetMapping("/")
+    public String home() {
+        return "🎵 Guess the Song Backend is running!";
     }
 }
