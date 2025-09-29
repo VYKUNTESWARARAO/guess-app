@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+# Ignore Firebase credentials
+src/main/resources/firebase-service-account.json
