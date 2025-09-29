@@ -1,14 +1,11 @@
 package com.gts.config;
 
-import java.io.FileNotFoundException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.Firestore;
@@ -16,18 +13,20 @@ import com.google.cloud.firestore.FirestoreOptions;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 
-import jakarta.annotation.PostConstruct;
-
 @Configuration
 public class FirebaseConfig {
 
-    @Value("${firebase.service-account}")
-    private String serviceAccountPath;
+    // Read the Firebase service account JSON from environment variable
+    private static final String FIREBASE_JSON_ENV = "FIREBASE_SERVICE_ACCOUNT";
 
-    @PostConstruct
+    @Bean
     public void init() throws IOException {
-        Resource resource = new ClassPathResource(serviceAccountPath.replace("classpath:", ""));
-        InputStream serviceAccount = resource.getInputStream();
+        String firebaseJson = System.getenv(FIREBASE_JSON_ENV);
+        if (firebaseJson == null || firebaseJson.isEmpty()) {
+            throw new RuntimeException(FIREBASE_JSON_ENV + " environment variable is not set!");
+        }
+
+        InputStream serviceAccount = new ByteArrayInputStream(firebaseJson.getBytes());
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
@@ -38,22 +37,19 @@ public class FirebaseConfig {
         }
     }
 
-   
-
     @Bean
     public Firestore firestore() throws IOException {
-        InputStream serviceAccount = getClass().getClassLoader()
-                .getResourceAsStream("firebase-service-account.json"); // file in src/main/resources
-        if (serviceAccount == null) {
-            throw new FileNotFoundException("Firebase service account key not found in resources!");
+        String firebaseJson = System.getenv(FIREBASE_JSON_ENV);
+        if (firebaseJson == null || firebaseJson.isEmpty()) {
+            throw new RuntimeException(FIREBASE_JSON_ENV + " environment variable is not set!");
         }
-        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+
+        InputStream serviceAccount = new ByteArrayInputStream(firebaseJson.getBytes());
+
         FirestoreOptions options = FirestoreOptions.newBuilder()
-                .setCredentials(credentials)
+                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                 .build();
+
         return options.getService();
     }
-
- }
-
-
+}
