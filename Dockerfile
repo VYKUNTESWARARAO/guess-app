@@ -24,5 +24,9 @@ COPY firebase-service-account.json /app/firebase-service-account.json
 # Expose your port
 EXPOSE 4545
 
+# Create JSON file at runtime from env
+RUN echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > src/main/resources/firebase-service-account.json
+
+
 # Run the app
 ENTRYPOINT ["java","-jar","app.war"]
