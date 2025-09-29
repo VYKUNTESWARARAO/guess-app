@@ -3,7 +3,7 @@ FROM maven:3.9.2-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # Copy pom and source code
-COPY pom.xml .
+COPY pom.xml . 
 COPY src ./src
 
 # Build WAR
@@ -19,14 +19,12 @@ ENV FIREBASE_SERVICE_ACCOUNT=/app/firebase-service-account.json
 
 # Copy WAR file
 COPY --from=build /app/target/gts-0.0.1-SNAPSHOT.war app.war
-COPY firebase-service-account.json /app/firebase-service-account.json
 
 # Expose your port
 EXPOSE 4545
 
-# Create JSON file at runtime from env
-RUN echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > src/main/resources/firebase-service-account.json
-
+# Create Firebase JSON file from environment variable at runtime
+RUN echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > /app/firebase-service-account.json
 
 # Run the app
 ENTRYPOINT ["java","-jar","app.war"]
