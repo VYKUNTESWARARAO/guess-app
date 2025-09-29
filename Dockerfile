@@ -1,26 +1,28 @@
-# Use a Maven image to build the project
-FROM maven:3.9.0-eclipse-temurin-17 AS build
-
-# Set working directory
+# Stage 1: Build the Spring Boot app
+FROM maven:3.9.2-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # Copy pom and source code
 COPY pom.xml .
 COPY src ./src
 
-# Package the Spring Boot app
+# Build WAR
 RUN mvn clean package -DskipTests
 
-# Use a lightweight JDK image for running
-FROM eclipse-temurin:17-jdk-alpine
-
+# Stage 2: Run the app
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
-# Copy the built jar from the previous stage
-COPY --from=build /app/target/gts-0.0.1-SNAPSHOT.war app.war
+# Set environment variable to avoid Netty native SSL crash
+ENV GRPC_NETTY_USE_NATIVE_TRANSPORT=false
+ENV FIREBASE_SERVICE_ACCOUNT=/app/firebase-service-account.json
 
-# Expose port 8080
+# Copy WAR file
+COPY --from=build /app/target/gts-0.0.1-SNAPSHOT.war app.war
+COPY firebase-service-account.json /app/firebase-service-account.json
+
+# Expose your port
 EXPOSE 4545
 
-# Run the Spring Boot app
-ENTRYPOINT ["java", "-jar", "app.war"]
+# Run the app
+ENTRYPOINT ["java","-jar","app.war"]
