@@ -4,11 +4,9 @@ import com.gts.entity.Song;
 import com.gts.service.SongService;
 import com.gts.service.UserValidationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 @RestController
 @CrossOrigin("*")
@@ -23,37 +21,56 @@ public class AdminController {
         this.userValidationService = userValidationService;
     }
 
-    private void checkAdmin(Authentication authentication) throws ExecutionException, InterruptedException {
-        String email = (String) authentication.getPrincipal();
+    /** ✅ Reusable check for admin based on email header */
+    private void checkAdmin(String email) throws Exception {
+        if (email == null || email.isEmpty()) {
+            throw new RuntimeException("Missing email header");
+        }
         if (!userValidationService.isAdmin(email)) {
             throw new RuntimeException("Access denied: Not an admin");
         }
     }
 
+    /** ➕ Add new song */
     @PostMapping
-    public ResponseEntity<String> addSong(@RequestBody Song song, Authentication authentication) throws Exception {
-        checkAdmin(authentication);
+    public ResponseEntity<String> addSong(
+            @RequestBody Song song,
+            @RequestHeader("X-User-Email") String email) throws Exception {
+
+        checkAdmin(email);
         String id = songService.addSong(song);
         return ResponseEntity.ok("Song added with ID: " + id);
     }
 
+    /** ✏️ Update existing song */
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateSong(@PathVariable String id, @RequestBody Song song, Authentication authentication) throws Exception {
-        checkAdmin(authentication);
+    public ResponseEntity<String> updateSong(
+            @PathVariable String id,
+            @RequestBody Song song,
+            @RequestHeader("X-User-Email") String email) throws Exception {
+
+        checkAdmin(email);
         songService.updateSong(id, song);
         return ResponseEntity.ok("Song updated");
     }
 
+    /** ❌ Delete song */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteSong(@PathVariable String id, Authentication authentication) throws Exception {
-        checkAdmin(authentication);
+    public ResponseEntity<String> deleteSong(
+            @PathVariable String id,
+            @RequestHeader("X-User-Email") String email) throws Exception {
+
+        checkAdmin(email);
         songService.deleteSong(id);
         return ResponseEntity.ok("Song deleted");
     }
 
+    /** 📃 Get all songs */
     @GetMapping
-    public ResponseEntity<List<Song>> getAllSongs(Authentication authentication) throws Exception {
-        checkAdmin(authentication);
+    public ResponseEntity<List<Song>> getAllSongs(
+            @RequestHeader("X-User-Email") String email) throws Exception {
+
+        checkAdmin(email);
         return ResponseEntity.ok(songService.getAllSongs());
     }
 }
