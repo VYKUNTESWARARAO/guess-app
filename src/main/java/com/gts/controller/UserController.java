@@ -3,14 +3,7 @@ package com.gts.controller;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.gts.entity.Song;
 import com.gts.entity.User;
@@ -33,17 +26,17 @@ public class UserController {
         this.userService = userService;
     }
 
-    // Get a random song for guessing
+    /** 🎵 Get a random song for guessing */
     @GetMapping("/song")
     public ResponseEntity<Song> getRandomSong() throws ExecutionException, InterruptedException {
         Song song = songService.getRandomSong();
         return ResponseEntity.ok(song);
     }
 
-    // Submit a guess
+    /** 🎯 Submit a guess */
     @PostMapping("/guess")
     public ResponseEntity<String> submitGuess(
-            @AuthenticationPrincipal String userEmail,
+            @RequestHeader("X-User-Email") String userEmail,   // ✅ replaced AuthenticationPrincipal
             @RequestParam String songId,
             @RequestParam String guessedMovie,
             @RequestParam long timeTaken) throws ExecutionException, InterruptedException {
@@ -54,20 +47,25 @@ public class UserController {
                 .findFirst()
                 .orElse(null);
 
-        if (song == null) return ResponseEntity.badRequest().body("Song not found");
+        if (song == null) {
+            return ResponseEntity.badRequest().body("Song not found");
+        }
 
         int points = guessService.submitGuess(userEmail, song, guessedMovie, timeTaken);
         return ResponseEntity.ok("You earned " + points + " points!");
     }
 
-    // Get user stats
+    /** 📊 Get user stats */
     @GetMapping("/stats")
-    public ResponseEntity<String> getUserStats(@AuthenticationPrincipal String userEmail) throws ExecutionException, InterruptedException {
+    public ResponseEntity<String> getUserStats(
+            @RequestHeader("X-User-Email") String userEmail) throws ExecutionException, InterruptedException {
+
         int totalScore = userService.getTotalScore(userEmail);
         long completedSongs = userService.getCompletedSongs(userEmail);
         return ResponseEntity.ok("Total Score: " + totalScore + ", Songs Completed: " + completedSongs);
     }
-    
+
+    /** ➕ Create a user */
     @PostMapping("/post")
     public ResponseEntity<String> createUser(@RequestBody User user) throws ExecutionException, InterruptedException {
         String id = userService.createUser(user);

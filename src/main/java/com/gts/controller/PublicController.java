@@ -22,8 +22,5 @@ public class PublicController {
                 """;
         return ResponseEntity.ok(rules);
     }
-    @GetMapping("/")
-    public String home() {
-        return "🎵 Guess the Song Backend is running!";
-    }
+   
 }
